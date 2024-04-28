@@ -41,6 +41,7 @@ tree.bind('<<TreeviewSelect>>', on_menu_select)
 
 module_classes = base.basedevtools.__subclasses__()
 categories = {}
+modules = {}
 for devmod in module_classes:
     categories = add_dev_module(tree, devmod, categories)
 
