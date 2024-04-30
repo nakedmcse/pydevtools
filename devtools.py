@@ -5,12 +5,17 @@ from devmodules import basedevtools as base
 from devmodules import encoding_tool_1, json_prettyprint, network_tool_1, network_tool_2
 
 def on_menu_select(event):
+    global output_frame, pane
     selected_item = tree.focus()
     item_text = tree.item(selected_item, 'text')
-    output_text.config(state=tk.NORMAL)
-    output_text.delete(1.0, tk.END)
-    output_text.insert(tk.END, f"You selected: {item_text}\n")
-    output_text.config(state=tk.DISABLED)
+    output_frame.destroy()
+    output_frame = ttk.Frame(pane)
+    pane.add(output_frame, weight=3)
+    if item_text in modules:
+        modules[item_text].render(output_frame)
+    else:
+        output_text = tk.Text(output_frame, state=tk.DISABLED)
+        output_text.pack(expand=True, fill=tk.BOTH)
 
 
 def add_dev_module(tree: any, devmod: any, categories: any):
@@ -25,6 +30,7 @@ def add_dev_module(tree: any, devmod: any, categories: any):
 
 main_window = tk.Tk()
 main_window.title("Dev Tools")
+main_window.geometry("1024x600")
 
 # Create PanedWindow
 pane = ttk.PanedWindow(main_window, orient=tk.HORIZONTAL)
@@ -44,6 +50,7 @@ categories = {}
 modules = {}
 for devmod in module_classes:
     categories = add_dev_module(tree, devmod, categories)
+    modules[devmod.display_name] = devmod(devmod.display_name, devmod.category)
 
 # Create the output area
 output_frame = ttk.Frame(pane, width=500)
