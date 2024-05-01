@@ -75,10 +75,17 @@ class json_prettyprint(base.basedevtools):
 
     def paste(self, event=None):
         try:
+            start = self.input_text_frame.index("sel.first")
+            end = self.input_text_frame.index("sel.last")
+            self.input_text_frame.delete(start, end)
+        except tk.TclError:
+            # handle nothing selected
+            pass
+        try:
             text_content = self.root.clipboard_get()
             self.input_text_frame.insert(tk.INSERT, text_content)
         except tk.TclError:
-            # handle nothing selected
+            # handle nothing in clipboard
             pass
 
     def show_input_context_menu(self,event):
