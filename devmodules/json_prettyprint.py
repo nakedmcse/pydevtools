@@ -12,6 +12,7 @@ class json_prettyprint(base.basedevtools):
     input_text_frame = None
     output_text_frame = None
     indent_var = None
+    sort_var = None
 
     def load_file(self):
         file_path = filedialog.askopenfilename()
@@ -35,7 +36,8 @@ class json_prettyprint(base.basedevtools):
     def convert_json(self):
         try:
             obj = json.loads(self.input_text_frame.get(1.0, tk.END))
-            formatted_json = json.dumps(obj, indent=int(self.indent_var.get()))
+            indent_level = None if self.indent_var.get() == "minify" else int(self.indent_var.get())
+            formatted_json = json.dumps(obj, indent=indent_level, sort_keys=self.sort_var.get())
             self.output_text_frame.config(state=tk.NORMAL)
             self.output_text_frame.delete(1.0, tk.END)
             self.output_text_frame.insert(tk.END, formatted_json)
@@ -49,14 +51,21 @@ class json_prettyprint(base.basedevtools):
         header_label.pack(anchor="nw")
 
         button_frame = tk.Frame(output_frame)
-        button_frame.pack(fill=tk.X)
+        button_frame.pack(fill=tk.X, pady=5)
 
         load_button = tk.Button(button_frame, text="Load", command=self.load_file)
         load_button.pack(side="left", padx=5)
 
+        indent_label = tk.Label(button_frame, text="Indent:")
+        indent_label.pack(side="left")
         self.indent_var = tk.StringVar(value="4")
-        indent_menu = tk.OptionMenu(button_frame, self.indent_var, "4", "3", "2", "1", "0")
+        indent_menu = tk.OptionMenu(button_frame, self.indent_var, "4", "3", "2", "1", "0", "minify")
+        indent_menu.config(width=6)
         indent_menu.pack(side="left", padx=5)
+
+        self.sort_var = tk.BooleanVar(value=False)
+        sort_flag = tk.Checkbutton(button_frame, text="Sort", variable=self.sort_var)
+        sort_flag.pack(side="left", padx=5)
 
         convert_button = tk.Button(button_frame, text="Convert", command=self.convert_json)
         convert_button.pack(side="left", padx=5)
@@ -64,7 +73,7 @@ class json_prettyprint(base.basedevtools):
         save_button = tk.Button(button_frame, text="Save", command=self.save_file)
         save_button.pack(side="left", padx=5)
 
-        input_text_frame = tk.Text(output_frame, width=40)
-        output_text_frame = tk.Text(output_frame, state=tk.DISABLED, width=40)
-        input_text_frame.pack(side="left", fill=tk.BOTH, expand=True, padx=5)
-        output_text_frame.pack(side="left", fill=tk.BOTH, expand=True, padx=5)
+        self.input_text_frame = tk.Text(output_frame, width=40)
+        self.output_text_frame = tk.Text(output_frame, state=tk.DISABLED, width=40)
+        self.input_text_frame.pack(side="left", fill=tk.BOTH, expand=True, padx=5)
+        self.output_text_frame.pack(side="left", fill=tk.BOTH, expand=True, padx=5)
