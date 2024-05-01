@@ -15,6 +15,9 @@ class json_prettyprint(base.basedevtools):
     output_text_frame = None
     indent_var = None
     sort_var = None
+    context_menu = None
+    output_context_menu = None
+    root = None
 
     def load_file(self):
         file_path = filedialog.askopenfilename()
@@ -52,9 +55,42 @@ class json_prettyprint(base.basedevtools):
         except json.JSONDecodeError:
             messagebox.showerror("Error", "Invalid JSON")
 
+    def copy(self, event=None):
+        try:
+            text_content = self.input_text_frame.get("sel.first", "sel.last")
+            self.root.clipboard_clear()
+            self.root.clipboard_append(text_content)
+        except tk.TclError:
+            # handle nothing selected
+            pass
+
+    def copy_output(self, event=None):
+        try:
+            text_content = self.output_text_frame.get("sel.first", "sel.last")
+            self.root.clipboard_clear()
+            self.root.clipboard_append(text_content)
+        except tk.TclError:
+            # handle nothing selected
+            pass
+
+    def paste(self, event=None):
+        try:
+            text_content = self.root.clipboard_get()
+            self.input_text_frame.insert(tk.INSERT, text_content)
+        except tk.TclError:
+            # handle nothing selected
+            pass
+
+    def show_input_context_menu(self,event):
+        self.context_menu.post(event.x_root, event.y_root)
+
+    def show_output_context_menu(self,event):
+        self.output_context_menu.post(event.x_root, event.y_root)
+
     def render(self, output_frame):
         self.input_text = ""
         self.output_text = ""
+        self.root = output_frame
         header_font = font.Font(size=14, weight="bold")
         header_label = tk.Label(output_frame, text="JSON Pretty Printer", font=header_font)
         header_label.pack(anchor="nw")
@@ -83,6 +119,17 @@ class json_prettyprint(base.basedevtools):
         save_button.pack(side="left", padx=5)
 
         self.input_text_frame = tk.Text(output_frame, width=40)
+        self.input_text_frame.bind("<Button-2>", self.show_input_context_menu)
+        self.input_text_frame.bind("<Button-3>", self.show_input_context_menu)
         self.output_text_frame = tk.Text(output_frame, state=tk.DISABLED, width=40)
+        self.output_text_frame.bind("<Button-2>", self.show_output_context_menu)
+        self.output_text_frame.bind("<Button-3>", self.show_output_context_menu)
         self.input_text_frame.pack(side="left", fill=tk.BOTH, expand=True, padx=5)
         self.output_text_frame.pack(side="left", fill=tk.BOTH, expand=True, padx=5)
+
+        self.context_menu = tk.Menu(self.input_text_frame, tearoff=0)
+        self.context_menu.add_command(label="Copy", command=self.copy)
+        self.context_menu.add_command(label="Paste", command=self.paste)
+
+        self.output_context_menu = tk.Menu(self.output_text_frame, tearoff=0)
+        self.output_context_menu.add_command(label="Copy", command=self.copy_output)
