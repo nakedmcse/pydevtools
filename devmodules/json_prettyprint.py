@@ -9,7 +9,9 @@ from devmodules import basedevtools as base
 class json_prettyprint(base.basedevtools):
     display_name = "JSON Pretty Printer"
     category = "Format tools"
+    input_text = ""
     input_text_frame = None
+    output_text = ""
     output_text_frame = None
     indent_var = None
     sort_var = None
@@ -19,8 +21,9 @@ class json_prettyprint(base.basedevtools):
         if file_path:
             try:
                 with open(file_path, 'r') as file:
+                    self.input_text = file.read()
                     self.input_text_frame.delete(1.0, tk.END)
-                    self.input_text_frame.insert(tk.END, file.read())
+                    self.input_text_frame.insert(tk.END, self.input_text[:1048576])
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load file: {e}")
 
@@ -29,23 +32,29 @@ class json_prettyprint(base.basedevtools):
         if file_path:
             try:
                 with open(file_path, 'w') as file:
-                    file.write(self.output_text_frame.get(1.0, tk.END))
+                    file.write(self.output_text)
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to save file: {e}")
 
     def convert_json(self):
+        if len(self.input_text) > 1048576:
+            self.input_text = self.input_text_frame.get(1.0, tk.END)[:-1] + self.input_text[1048577:]
+        else:
+            self.input_text = self.input_text_frame.get(1.0, tk.END)
         try:
-            obj = json.loads(self.input_text_frame.get(1.0, tk.END))
+            obj = json.loads(self.input_text)
             indent_level = None if self.indent_var.get() == "minify" else int(self.indent_var.get())
-            formatted_json = json.dumps(obj, indent=indent_level, sort_keys=self.sort_var.get())
+            self.output_text = json.dumps(obj, indent=indent_level, sort_keys=self.sort_var.get())
             self.output_text_frame.config(state=tk.NORMAL)
             self.output_text_frame.delete(1.0, tk.END)
-            self.output_text_frame.insert(tk.END, formatted_json)
+            self.output_text_frame.insert(tk.END, self.output_text[:1048576])
             self.output_text_frame.config(state=tk.DISABLED)
         except json.JSONDecodeError:
             messagebox.showerror("Error", "Invalid JSON")
 
     def render(self, output_frame):
+        self.input_text = ""
+        self.output_text = ""
         header_font = font.Font(size=14, weight="bold")
         header_label = tk.Label(output_frame, text="JSON Pretty Printer", font=header_font)
         header_label.pack(anchor="nw")
