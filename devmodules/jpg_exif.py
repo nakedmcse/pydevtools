@@ -24,8 +24,6 @@ class jpg_exif(base.basedevtools):
                 info_dict = {
                     "Filename": os.path.basename(file_path),
                     "Image Size": image.size,
-                    "Image Height": image.height,
-                    "Image Width": image.width,
                     "Image Format": image.format,
                     "Image Mode": image.mode,
                     "Image is Animated": getattr(image, "is_animated", False),
@@ -79,7 +77,7 @@ class jpg_exif(base.basedevtools):
         load_button = tk.Button(button_frame, text="Load", command=self.load_file)
         load_button.pack(side="left", padx=5)
 
-        self.output_text_frame = tk.Text(output_frame, state=tk.DISABLED, width=40)
+        self.output_text_frame = tk.Text(output_frame, state=tk.DISABLED, width=80)
         self.output_text_frame.bind("<Button-2>", self.show_output_context_menu)
         self.output_text_frame.bind("<Button-3>", self.show_output_context_menu)
         self.output_text_frame.pack(side="left", fill=tk.BOTH, expand=True, padx=5)
