@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from devmodules import basedevtools as base
-from devmodules import encoding_tool_1, json_prettyprint, xml_prettyprint, network_tool_1, network_tool_2, jpg_exif
+from devmodules import encoding_tool_1, json_prettyprint, xml_prettyprint, network_tool_1, network_tool_2, jpg_exif, image_compressor
 
 def on_menu_select(event):
     global output_frame, pane
