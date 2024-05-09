@@ -1,4 +1,5 @@
 # Image Compressor
+import os.path
 import tkinter as tk
 from tkinter import font, filedialog, messagebox
 from PIL import Image, ImageTk
@@ -10,6 +11,7 @@ class image_compressor(base.basedevtools):
     display_name = "Image Compressor"
     category = "Image tools"
     image_label = None
+    comp_level = None
     photo = None
     image = None
     resized_image = None
@@ -42,6 +44,7 @@ class image_compressor(base.basedevtools):
                 self.photo = ImageTk.PhotoImage(self.resized_image)
                 self.image_label.config(image=self.photo)
                 self.image_label.image = self.photo
+                self.comp_level.config(text="File Size: " + self.human_size(os.path.getsize(file_path)))
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to load file: {e}")
 
@@ -50,8 +53,18 @@ class image_compressor(base.basedevtools):
         if file_path:
             try:
                 self.image.save(file_path, optimize=True, quality=60)
+                self.comp_level.config(text = self.comp_level['text'] + ", Compressed Size: " + self.human_size(os.path.getsize(file_path)))
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to save file: {e}")
+
+    def human_size(self, size):
+        if size/1024 < 1:
+            return str(size) + "B"
+        if size/(1024 ** 2) < 1:
+            return str(round(size/1024, 2)) + "K"
+        if size/(1024 ** 3) < 1:
+            return str(round(size/(1024 ** 2), 2)) + "M"
+        return str(round(size/(1024 ** 3), 2)) + "G"
 
     def render(self, output_frame):
         self.root = output_frame
@@ -67,6 +80,9 @@ class image_compressor(base.basedevtools):
 
         compress_button = tk.Button(button_frame, text="Compress", command=self.compress_file)
         compress_button.pack(side="left", padx=5)
+
+        self.comp_level = tk.Label(button_frame)
+        self.comp_level.pack(side="left", padx=10)
 
         self.image_label = tk.Label(output_frame, width=80)
         self.image_label.pack(side="left", fill=tk.BOTH, expand=True, padx=5)
