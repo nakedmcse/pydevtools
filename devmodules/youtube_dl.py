@@ -12,6 +12,7 @@ class youtube_dl(base.basedevtools):
     output_text_frame = None
     output_context_menu = None
     url_entry = None
+    resolution_var = None
     root = None
 
     def download(self):
@@ -21,7 +22,16 @@ class youtube_dl(base.basedevtools):
                 self.output_text_frame.config(state=tk.NORMAL)
                 self.output_text_frame.insert(tk.END,f"Downloading {url}...\n")
                 yt_object = YouTube(url)
-                yt_object = yt_object.streams.get_highest_resolution()
+
+                resolution = self.resolution_var.get()
+                match resolution:
+                    case "Highest":
+                        yt_object = yt_object.streams.get_highest_resolution()
+                    case "Lowest":
+                        yt_object = yt_object.streams.get_lowest_resolution()
+                    case "Audio":
+                        yt_object = yt_object.streams.get_audio_only()
+
                 filepath = filedialog.askdirectory()
                 savedpath = yt_object.download(output_path=filepath)
                 self.output_text_frame.insert(tk.END,f"Saved to {savedpath}\n")
@@ -52,6 +62,13 @@ class youtube_dl(base.basedevtools):
 
         self.url_entry = tk.Entry(button_frame, width=40)
         self.url_entry.pack(side="left", padx=5)
+
+        resolution_label = tk.Label(button_frame, text="Resolution:")
+        resolution_label.pack(side="left")
+        self.resolution_var = tk.StringVar(value="Highest")
+        resolution_menu = tk.OptionMenu(button_frame, self.resolution_var, "Highest", "Lowest", "Audio")
+        resolution_menu.config(width=8)
+        resolution_menu.pack(side="left", padx=5)
 
         download_button = tk.Button(button_frame, text="Download", command=self.download)
         download_button.pack(side="left", padx=5)
