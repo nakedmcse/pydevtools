@@ -1,8 +1,7 @@
 # Youtube Downloader module
-import os
 import tkinter as tk
 from tkinter import font, filedialog, messagebox
-from pytube import YouTube
+import yt_dlp
 from devmodules import basedevtools as base
 
 
@@ -15,32 +14,41 @@ class youtube_dl(base.basedevtools):
     resolution_var = None
     root = None
 
-    def get_highest_itag(self, videos, mime):
-        filtered = [video for video in videos if video['mimeType'].startswith(mime)]
-        hq = max(filtered, key=lambda x: int(x['qualityLabel'].rstrip('p')), default=None)
-        return hq['itag'] if hq else None
-
     def download(self):
+        downloaded_files = []
+
+        def hook(d):
+            if d['status'] == 'finished':
+                downloaded_files.append(d['filename'])
+
         url = self.url_entry.get()
         if url:
             try:
                 self.output_text_frame.config(state=tk.NORMAL)
                 self.output_text_frame.insert(tk.END,f"Downloading {url}...\n")
-                yt_object = YouTube(url)
+
+                filepath = filedialog.askdirectory()
+
+                ydl_opts = {
+                    'format': 'best[ext=mp4]/best',
+                    'paths': {'home': filepath},
+                    'progress_hooks': [hook],
+                }
 
                 resolution = self.resolution_var.get()
                 match resolution:
                     case "Highest":
-                        yt_object = yt_object.streams.filter(progressive=True).get_highest_resolution()
+                        ydl_opts['format'] = 'best[ext=mp4]/best'
                     case "Lowest":
-                        yt_object = yt_object.streams.filter(progressive=True).get_lowest_resolution()
+                        ydl_opts['format'] = 'worst[ext=mp4]/worst'
                     case "Audio":
-                        yt_object = yt_object.streams.filter(progressive=True).get_audio_only()
+                        ydl_opts['format'] = 'bestaudio[ext=m4a]/bestaudio'
                     case _:
-                        yt_object = yt_object.streams.filter(progressive=True).get_highest_resolution()
+                        ydl_opts['format'] = 'best[ext=mp4]/best'
 
-                filepath = filedialog.askdirectory()
-                savedpath = yt_object.download(output_path=filepath)
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    error_code = ydl.download([url])
+                savedpath = downloaded_files[0]
                 self.output_text_frame.insert(tk.END,f"Saved to {savedpath}\n")
                 self.output_text_frame.config(state=tk.DISABLED)
             except Exception as e:
