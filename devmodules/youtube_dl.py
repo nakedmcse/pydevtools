@@ -47,7 +47,7 @@ class youtube_dl(base.basedevtools):
                         ydl_opts['format'] = 'best[ext=mp4]/best'
 
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    error_code = ydl.download([url])
+                    ydl.download([url])
                 savedpath = downloaded_files[0]
                 self.output_text_frame.insert(tk.END,f"Saved to {savedpath}\n")
                 self.output_text_frame.config(state=tk.DISABLED)
