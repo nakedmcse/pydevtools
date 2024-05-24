@@ -10,6 +10,7 @@ class youtube_dl(base.basedevtools):
     category = "Image tools"
     output_text_frame = None
     output_context_menu = None
+    input_context_menu = None
     url_entry = None
     resolution_var = None
     root = None
@@ -63,8 +64,26 @@ class youtube_dl(base.basedevtools):
             # handle nothing selected
             pass
 
+    def paste_input(self, event=None):
+        try:
+            start = self.url_entry.index("sel.first")
+            end = self.url_entry.index("sel.last")
+            self.url_entry.delete(start, end)
+        except tk.TclError:
+            # handle nothing selected
+            pass
+        try:
+            text_content = self.root.clipboard_get()
+            self.url_entry.insert(tk.INSERT, text_content)
+        except tk.TclError:
+            # handle nothing in clipboard
+            pass
+
     def show_output_context_menu(self, event):
         self.output_context_menu.post(event.x_root, event.y_root)
+
+    def show_input_context_menu(self, event):
+        self.input_context_menu.post(event.x_root, event.y_root)
 
     def render(self, output_frame):
         self.root = output_frame
@@ -76,6 +95,8 @@ class youtube_dl(base.basedevtools):
         button_frame.pack(fill=tk.X, pady=5)
 
         self.url_entry = tk.Entry(button_frame, width=50)
+        self.url_entry.bind("<Button-2>", self.show_input_context_menu)
+        self.url_entry.bind("<Button-3>", self.show_input_context_menu)
         self.url_entry.pack(side="left", padx=5)
 
         resolution_label = tk.Label(button_frame, text="Resolution:")
@@ -95,3 +116,5 @@ class youtube_dl(base.basedevtools):
 
         self.output_context_menu = tk.Menu(self.output_text_frame, tearoff=0)
         self.output_context_menu.add_command(label="Copy", command=self.copy_output)
+        self.input_context_menu = tk.Menu(self.url_entry, tearoff=0)
+        self.input_context_menu.add_command(label="Paste", command=self.paste_input)
