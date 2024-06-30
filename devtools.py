@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from devmodules import basedevtools as base
-from devmodules import json_prettyprint, xml_prettyprint, jpg_exif, image_compressor, youtube_dl
+from devmodules import json_prettyprint, xml_prettyprint, jpg_exif, image_compressor, youtube_dl, waifuvault
 
 def on_menu_select(event):
     global output_frame, pane
@@ -48,7 +48,7 @@ tree.bind('<<TreeviewSelect>>', on_menu_select)
 module_classes = base.basedevtools.__subclasses__()
 categories = {}
 modules = {}
-for devmod in module_classes:
+for devmod in sorted(module_classes, reverse=True, key=lambda cls: cls.__name__):
     categories = add_dev_module(tree, devmod, categories)
     modules[devmod.display_name] = devmod(devmod.display_name, devmod.category)
 
