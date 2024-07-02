@@ -21,6 +21,12 @@ class waifuvault_ul(base.basedevtools):
     def upload_file(self):
         file_path = filedialog.askopenfilename()
 
+    def choose_file(self):
+        file_path = filedialog.askopenfilename()
+        if file_path:
+            self.filename_var.delete(0, tk.END)
+            self.filename_var.insert(tk.END, file_path)
+
     def render(self, output_frame):
         self.root = output_frame
         header_font = font.Font(size=14, weight="bold")
@@ -38,7 +44,7 @@ class waifuvault_ul(base.basedevtools):
         filename_label.pack(side="left", padx=5)
         self.filename_var = tk.Entry(button_upper_frame, width=65)
         self.filename_var.pack(side="left", padx=5)
-        choosefile_button = tk.Button(button_upper_frame, text="Browse", command=self.upload_file)
+        choosefile_button = tk.Button(button_upper_frame, text="Browse", command=self.choose_file)
         choosefile_button.pack(side="left", padx=5)
 
         self.hidefilename_var = tk.BooleanVar(value=False)
