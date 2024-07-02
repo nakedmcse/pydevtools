@@ -12,6 +12,7 @@ class waifuvault_ul(base.basedevtools):
     output_context_menu = None
     input_context_menu = None
     root = None
+    filename_var = None
     hidefilename_var = None
     onetime_var = None
     password_var = None
@@ -26,10 +27,19 @@ class waifuvault_ul(base.basedevtools):
         header_label = tk.Label(output_frame, text="WaifuVault Uploader", font=header_font)
         header_label.pack(anchor="nw")
 
+        button_upper_frame = tk.Frame(output_frame)
+        button_upper_frame.pack(fill=tk.X)
         button_frame = tk.Frame(output_frame)
-        button_frame.pack(fill=tk.X, pady=5)
+        button_frame.pack(fill=tk.X)
         button_lower_frame = tk.Frame(output_frame)
         button_lower_frame.pack(fill=tk.X)
+
+        filename_label = tk.Label(button_upper_frame, text="File:")
+        filename_label.pack(side="left", padx=5)
+        self.filename_var = tk.Entry(button_upper_frame, width=65)
+        self.filename_var.pack(side="left", padx=5)
+        choosefile_button = tk.Button(button_upper_frame, text="Browse", command=self.upload_file)
+        choosefile_button.pack(side="left", padx=5)
 
         self.hidefilename_var = tk.BooleanVar(value=False)
         hidefilename_flag = tk.Checkbutton(button_frame, text="Hide Filename", variable=self.hidefilename_var)
@@ -48,7 +58,7 @@ class waifuvault_ul(base.basedevtools):
 
         password_label = tk.Label(button_frame, text="Password:")
         password_label.pack(side="left", padx=5)
-        self.password_var = tk.Entry(button_frame, width=20)
+        self.password_var = tk.Entry(button_frame, width=22)
         self.password_var.pack(side="left", padx=5)
 
         upload_button = tk.Button(button_lower_frame, text="Upload", command=self.upload_file)
