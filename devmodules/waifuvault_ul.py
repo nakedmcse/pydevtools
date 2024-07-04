@@ -18,6 +18,10 @@ class waifuvault_ul(base.basedevtools):
     onetime_var = None
     password_var = None
     expire_var = None
+    old_password_var = None
+    new_password_var = None
+    opts_hidefilename_var = None
+    opts_expire_var = None
 
     def upload_file(self):
         file_path = self.filename_var.get()
@@ -87,19 +91,67 @@ class waifuvault_ul(base.basedevtools):
 
             edit_window = tk.Tk()
             edit_window.title("Edit Entry")
-            edit_window.geometry("640x480")
+            edit_window.geometry("640x250")
 
-            output_text_frame = tk.Text(edit_window, state=tk.DISABLED, width=40)
-            output_text_frame.pack(side="left", fill=tk.BOTH, expand=True, padx=5)
+            output_text_frame = tk.Text(edit_window, state=tk.DISABLED, width=40, height=5)
+            output_text_frame.pack(side="top", fill=tk.X, expand=True, padx=5)
             output_text_frame.config(state=tk.NORMAL)
             output_text_frame.delete(1.0, tk.END)
-            output_text_frame.insert(tk.END, f"URL: {entry_info.url}\nRetention: {entry_info.retentionPeriod}\n")
+            output_text_frame.insert(tk.END, f"URL: {entry_info.url}\nRetention: {entry_info.retentionPeriod}\nProtected: {entry_info.options.protected}\nOne Time Download: {entry_info.options.oneTimeDownload}\nHide Filename: {entry_info.options.hideFilename}\n")
             output_text_frame.config(state=tk.DISABLED)
 
-            edit_exit = tk.Button(edit_window, text="Exit", command=edit_window.destroy)
-            edit_exit.pack(side="top", pady=15)
+            passwords_frame = tk.Frame(edit_window)
+            passwords_frame.pack(side="top", pady=5)
+            old_password_label = tk.Label(passwords_frame, text="Old Password:")
+            old_password_label.pack(side="left", padx=5)
+            self.old_password_var = tk.Entry(passwords_frame, width=15)
+            self.old_password_var.pack(side="left", padx=5)
+            new_password_label = tk.Label(passwords_frame, text="New Password:")
+            new_password_label.pack(side="left", padx=5)
+            self.new_password_var = tk.Entry(passwords_frame, width=15)
+            self.new_password_var.pack(side="left", padx=5)
+
+            options_frame = tk.Frame(edit_window)
+            options_frame.pack(side="top", pady=5)
+            self.opts_hidefilename_var = tk.BooleanVar(master=edit_window, value=entry_info.options.hideFilename)
+            opts_hidefilename_flag = tk.Checkbutton(options_frame, text="Hide Filename", variable=self.opts_hidefilename_var)
+            opts_hidefilename_flag.pack(side="left", padx=5)
+
+            opts_expire_label = tk.Label(options_frame, text="Expire:")
+            opts_expire_label.pack(side="left")
+            self.opts_expire_var = tk.StringVar(master=edit_window, value="No Change")
+            opts_expire_menu = tk.OptionMenu(options_frame, self.opts_expire_var, "No Change", "1 Hour", "1 Day", "1 Week", "1 Month", "1 Year")
+            opts_expire_menu.config(width=10)
+            opts_expire_menu.pack(side="left", padx=5)
+
+            buttons = tk.Frame(edit_window)
+            buttons.pack(side="top", pady=15)
+            edit_update = tk.Button(buttons, text="Update Entry", command=lambda: self.update_entry(entry_info.token, edit_window, self.new_password_var.get(), self.old_password_var.get(), self.opts_hidefilename_var.get(), self.opts_expire_var.get()))
+            edit_update.pack(side="left", padx=5)
+            edit_exit = tk.Button(buttons, text="Exit", command=edit_window.destroy)
+            edit_exit.pack(side="left", padx=5)
+            edit_window.mainloop()
         except Exception as e:
             messagebox.showerror("Error", f"Edit failed: {e}")
+
+    def update_entry(self, token: str, target: any, password: str, previous_password: str, hide_filename: bool, expire_var: str):
+        try:
+            expires = None
+            match expire_var:
+                case "1 Hour":
+                    expires = "1h"
+                case "1 Day":
+                    expires = "1d"
+                case "1 Week":
+                    expires = "1w"
+                case "1 Month":
+                    expires = "30d"
+                case "1 Year":
+                    expires = "365d"
+            waifuvault.file_update(token, password, previous_password, expires, hide_filename)
+            target.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", f"Update failed: {e}")
 
     def delete_entry(self, token: str, target: any):
         try:
