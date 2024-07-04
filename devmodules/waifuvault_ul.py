@@ -58,6 +58,9 @@ class waifuvault_ul(base.basedevtools):
     def show_output_context_menu(self,event):
         self.output_context_menu.post(event.x_root, event.y_root)
 
+    def show_input_context_menu(self,event):
+        self.input_context_menu.post(event.x_root, event.y_root)
+
     def copy_output(self, event=None):
         try:
             text_content = self.output_text_frame.get("sel.first", "sel.last")
@@ -65,6 +68,21 @@ class waifuvault_ul(base.basedevtools):
             self.root.clipboard_append(text_content)
         except tk.TclError:
             # handle nothing selected
+            pass
+
+    def paste_input(self, event=None):
+        try:
+            start = self.filename_var.index("sel.first")
+            end = self.filename_var.index("sel.last")
+            self.filename_var.delete(start, end)
+        except tk.TclError:
+            # handle nothing selected
+            pass
+        try:
+            text_content = self.root.clipboard_get()
+            self.filename_var.insert(tk.INSERT, text_content)
+        except tk.TclError:
+            # handle nothing in clipboard
             pass
 
     def render(self, output_frame):
@@ -83,6 +101,8 @@ class waifuvault_ul(base.basedevtools):
         filename_label = tk.Label(button_upper_frame, text="File:")
         filename_label.pack(side="left", padx=5)
         self.filename_var = tk.Entry(button_upper_frame, width=65)
+        self.filename_var.bind("<Button-2>", self.show_input_context_menu)
+        self.filename_var.bind("<Button-3>", self.show_input_context_menu)
         self.filename_var.pack(side="left", padx=5)
         choosefile_button = tk.Button(button_upper_frame, text="Browse", command=self.choose_file)
         choosefile_button.pack(side="left", padx=5)
@@ -117,3 +137,6 @@ class waifuvault_ul(base.basedevtools):
 
         self.output_context_menu = tk.Menu(self.output_text_frame, tearoff=0)
         self.output_context_menu.add_command(label="Copy", command=self.copy_output)
+
+        self.input_context_menu = tk.Menu(self.filename_var, tearoff=0)
+        self.input_context_menu.add_command(label="Paste", command=self.paste_input)
