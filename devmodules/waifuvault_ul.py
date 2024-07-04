@@ -82,7 +82,24 @@ class waifuvault_ul(base.basedevtools):
         self.root.clipboard_append(target)
 
     def edit_entry(self, token: str):
-        messagebox.showerror("Edit Entry", f"Edit Entry Goes Here - Token {token}")
+        try:
+            entry_info = waifuvault.file_info(token, True)
+
+            edit_window = tk.Tk()
+            edit_window.title("Edit Entry")
+            edit_window.geometry("640x480")
+
+            output_text_frame = tk.Text(edit_window, state=tk.DISABLED, width=40)
+            output_text_frame.pack(side="left", fill=tk.BOTH, expand=True, padx=5)
+            output_text_frame.config(state=tk.NORMAL)
+            output_text_frame.delete(1.0, tk.END)
+            output_text_frame.insert(tk.END, f"URL: {entry_info.url}\nRetention: {entry_info.retentionPeriod}\n")
+            output_text_frame.config(state=tk.DISABLED)
+
+            edit_exit = tk.Button(edit_window, text="Exit", command=edit_window.destroy)
+            edit_exit.pack(side="top", pady=15)
+        except Exception as e:
+            messagebox.showerror("Error", f"Edit failed: {e}")
 
     def delete_entry(self, token: str, target: any):
         try:
@@ -91,20 +108,8 @@ class waifuvault_ul(base.basedevtools):
         except Exception as e:
             messagebox.showerror("Error", f"Delete failed: {e}")
 
-    def show_output_context_menu(self, event):
-        self.output_context_menu.post(event.x_root, event.y_root)
-
     def show_input_context_menu(self, event):
         self.input_context_menu.post(event.x_root, event.y_root)
-
-    def copy_output(self, event=None,):
-        try:
-            text_content = frame.get("sel.first", "sel.last")
-            self.root.clipboard_clear()
-            self.root.clipboard_append(text_content)
-        except tk.TclError:
-            # handle nothing selected
-            pass
 
     def paste_input(self, event=None):
         try:
