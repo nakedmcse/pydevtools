@@ -44,7 +44,7 @@ class waifuvault_ul(base.basedevtools):
             try:
                 upload_res = waifuvault.upload_file(upload)
 
-                new_entry_frame = tk.Frame(self.results_frame)
+                new_entry_frame = tk.Frame(self.results_frame, pady=5)
                 new_entry_frame.pack(fill=tk.X)
                 entry_upper_line = tk.Frame(new_entry_frame)
                 entry_upper_line.pack(fill=tk.X)
@@ -166,5 +166,5 @@ class waifuvault_ul(base.basedevtools):
         upload_button = tk.Button(button_lower_frame, text="Upload", command=self.upload_file)
         upload_button.pack(side="left", padx=5)
 
-        self.results_frame = tk.Frame(output_frame)
+        self.results_frame = tk.Frame(output_frame, pady=15)
         self.results_frame.pack(fill=tk.X)
