@@ -9,6 +9,7 @@ class waifuvault_ul(base.basedevtools):
     display_name = "WaifuVault Uploader"
     category = "File tools"
     output_text_frame = None
+    results_frame = None
     output_context_menu = None
     input_context_menu = None
     root = None
@@ -42,12 +43,33 @@ class waifuvault_ul(base.basedevtools):
                                            hidefilename=self.hidefilename_var.get(), password=password, expires=expires)
             try:
                 upload_res = waifuvault.upload_file(upload)
-                self.output_text_frame.config(state=tk.NORMAL)
-                self.output_text_frame.insert(tk.END, f"Token: {upload_res.token}\nURL: {upload_res.url}\nRetention: {upload_res.retentionPeriod}\nEncrypted: {upload_res.options.protected}\nOne Time Download: {upload_res.options.oneTimeDownload}\n\n")
-                self.output_text_frame.config(state=tk.DISABLED)
+
+                new_entry_frame = tk.Frame(self.results_frame)
+                new_entry_frame.pack(fill=tk.X)
+                entry_upper_line = tk.Frame(new_entry_frame)
+                entry_upper_line.pack(fill=tk.X)
+                entry_lower_line = tk.Frame(new_entry_frame)
+                entry_lower_line.pack(fill=tk.X)
+
+                url_entry = tk.Entry(entry_upper_line, width=70)
+                url_entry.insert(tk.END, upload_res.url)
+                url_entry.pack(side="left", padx=5)
+
+                copy_url_button = tk.Button(entry_upper_line, text="Copy URL", command=lambda: self.copy_clip(upload_res.url))
+                copy_url_button.pack(side="left", padx=5)
+
+                token_entry = tk.Entry(entry_lower_line, width=35)
+                token_entry.insert(tk.END, upload_res.token)
+                token_entry.pack(side="left", padx=5)
+
+                copy_token_button = tk.Button(entry_lower_line, text="Copy Token", command=lambda: self.copy_clip(upload_res.token))
+                copy_token_button.pack(side="left", padx=5)
+                edit_entry_button = tk.Button(entry_lower_line, text="Edit", command=lambda: self.edit_entry(upload_res.token))
+                edit_entry_button.pack(side="left", padx=5)
+                delete_entry_button = tk.Button(entry_lower_line, text="Delete", command=lambda: self.delete_entry(upload_res.token, new_entry_frame))
+                delete_entry_button.pack(side="left", padx=5)
             except Exception as e:
                 messagebox.showerror("Error", f"Upload failed: {e}")
-
 
     def choose_file(self):
         file_path = filedialog.askopenfilename()
@@ -55,15 +77,29 @@ class waifuvault_ul(base.basedevtools):
             self.filename_var.delete(0, tk.END)
             self.filename_var.insert(tk.END, file_path)
 
-    def show_output_context_menu(self,event):
+    def copy_clip(self, target: str):
+        self.root.clipboard_clear()
+        self.root.clipboard_append(target)
+
+    def edit_entry(self, token: str):
+        messagebox.showerror("Edit Entry", f"Edit Entry Goes Here - Token {token}")
+
+    def delete_entry(self, token: str, target: any):
+        try:
+            waifuvault.delete_file(token)
+            target.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", f"Delete failed: {e}")
+
+    def show_output_context_menu(self, event):
         self.output_context_menu.post(event.x_root, event.y_root)
 
-    def show_input_context_menu(self,event):
+    def show_input_context_menu(self, event):
         self.input_context_menu.post(event.x_root, event.y_root)
 
-    def copy_output(self, event=None):
+    def copy_output(self, event=None,):
         try:
-            text_content = self.output_text_frame.get("sel.first", "sel.last")
+            text_content = frame.get("sel.first", "sel.last")
             self.root.clipboard_clear()
             self.root.clipboard_append(text_content)
         except tk.TclError:
@@ -130,13 +166,5 @@ class waifuvault_ul(base.basedevtools):
         upload_button = tk.Button(button_lower_frame, text="Upload", command=self.upload_file)
         upload_button.pack(side="left", padx=5)
 
-        self.output_text_frame = tk.Text(output_frame, state=tk.DISABLED, width=60)
-        self.output_text_frame.bind("<Button-2>", self.show_output_context_menu)
-        self.output_text_frame.bind("<Button-3>", self.show_output_context_menu)
-        self.output_text_frame.pack(side="left", fill=tk.BOTH, expand=True, padx=5, pady=5)
-
-        self.output_context_menu = tk.Menu(self.output_text_frame, tearoff=0)
-        self.output_context_menu.add_command(label="Copy", command=self.copy_output)
-
-        self.input_context_menu = tk.Menu(self.filename_var, tearoff=0)
-        self.input_context_menu.add_command(label="Paste", command=self.paste_input)
+        self.results_frame = tk.Frame(output_frame)
+        self.results_frame.pack(fill=tk.X)
