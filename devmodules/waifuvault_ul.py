@@ -19,13 +19,53 @@ class waifuvault_ul(base.basedevtools):
     expire_var = None
 
     def upload_file(self):
-        file_path = filedialog.askopenfilename()
+        file_path = self.filename_var.get()
+        password = self.password_var.get()
+        if password == '':
+            password = None
+        match self.expire_var.get():
+            case "Compute":
+                expires = None
+            case "1 Hour":
+                expires = "1h"
+            case "1 Day":
+                expires = "1d"
+            case "1 Week":
+                expires = "1w"
+            case "1 Month":
+                expires = "30d"
+            case "1 Year":
+                expires = "365d"
+
+        if file_path:
+            upload = waifuvault.FileUpload(target=file_path, oneTimeDownload=self.onetime_var.get(),
+                                           hidefilename=self.hidefilename_var.get(), password=password, expires=expires)
+            try:
+                upload_res = waifuvault.upload_file(upload)
+                self.output_text_frame.config(state=tk.NORMAL)
+                self.output_text_frame.insert(tk.END, f"Token: {upload_res.token}\nURL: {upload_res.url}\nRetention: {upload_res.retentionPeriod}\nEncrypted: {upload_res.options.protected}\nOne Time Download: {upload_res.options.oneTimeDownload}\n\n")
+                self.output_text_frame.config(state=tk.DISABLED)
+            except Exception as e:
+                messagebox.showerror("Error", f"Upload failed: {e}")
+
 
     def choose_file(self):
         file_path = filedialog.askopenfilename()
         if file_path:
             self.filename_var.delete(0, tk.END)
             self.filename_var.insert(tk.END, file_path)
+
+    def show_output_context_menu(self,event):
+        self.output_context_menu.post(event.x_root, event.y_root)
+
+    def copy_output(self, event=None):
+        try:
+            text_content = self.output_text_frame.get("sel.first", "sel.last")
+            self.root.clipboard_clear()
+            self.root.clipboard_append(text_content)
+        except tk.TclError:
+            # handle nothing selected
+            pass
 
     def render(self, output_frame):
         self.root = output_frame
@@ -69,3 +109,11 @@ class waifuvault_ul(base.basedevtools):
 
         upload_button = tk.Button(button_lower_frame, text="Upload", command=self.upload_file)
         upload_button.pack(side="left", padx=5)
+
+        self.output_text_frame = tk.Text(output_frame, state=tk.DISABLED, width=60)
+        self.output_text_frame.bind("<Button-2>", self.show_output_context_menu)
+        self.output_text_frame.bind("<Button-3>", self.show_output_context_menu)
+        self.output_text_frame.pack(side="left", fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+        self.output_context_menu = tk.Menu(self.output_text_frame, tearoff=0)
+        self.output_context_menu.add_command(label="Copy", command=self.copy_output)
