@@ -68,7 +68,7 @@ class waifuvault_ul(base.basedevtools):
 
                 copy_token_button = tk.Button(entry_lower_line, text="Copy Token", command=lambda: self.copy_clip(upload_res.token))
                 copy_token_button.pack(side="left", padx=5)
-                edit_entry_button = tk.Button(entry_lower_line, text="Edit", command=lambda: self.edit_entry(upload_res.token))
+                edit_entry_button = tk.Button(entry_lower_line, text="Edit", command=lambda: self.edit_entry(upload_res.token, url_entry))
                 edit_entry_button.pack(side="left", padx=5)
                 delete_entry_button = tk.Button(entry_lower_line, text="Delete", command=lambda: self.delete_entry(upload_res.token, new_entry_frame))
                 delete_entry_button.pack(side="left", padx=5)
@@ -85,7 +85,7 @@ class waifuvault_ul(base.basedevtools):
         self.root.clipboard_clear()
         self.root.clipboard_append(target)
 
-    def edit_entry(self, token: str):
+    def edit_entry(self, token: str, url_entry: any):
         try:
             entry_info = waifuvault.file_info(token, True)
 
@@ -126,7 +126,7 @@ class waifuvault_ul(base.basedevtools):
 
             buttons = tk.Frame(edit_window)
             buttons.pack(side="top", pady=15)
-            edit_update = tk.Button(buttons, text="Update Entry", command=lambda: self.update_entry(entry_info.token, edit_window, self.new_password_var.get(), self.old_password_var.get(), self.opts_hidefilename_var.get(), self.opts_expire_var.get()))
+            edit_update = tk.Button(buttons, text="Update Entry", command=lambda: self.update_entry(entry_info.token, edit_window, self.new_password_var.get(), self.old_password_var.get(), self.opts_hidefilename_var.get(), self.opts_expire_var.get(), url_entry))
             edit_update.pack(side="left", padx=5)
             edit_exit = tk.Button(buttons, text="Exit", command=edit_window.destroy)
             edit_exit.pack(side="left", padx=5)
@@ -134,7 +134,7 @@ class waifuvault_ul(base.basedevtools):
         except Exception as e:
             messagebox.showerror("Error", f"Edit failed: {e}")
 
-    def update_entry(self, token: str, target: any, password: str, previous_password: str, hide_filename: bool, expire_var: str):
+    def update_entry(self, token: str, target: any, password: str, previous_password: str, hide_filename: bool, expire_var: str, url_entry: any):
         try:
             expires = None
             match expire_var:
@@ -148,7 +148,9 @@ class waifuvault_ul(base.basedevtools):
                     expires = "30d"
                 case "1 Year":
                     expires = "365d"
-            waifuvault.file_update(token, password, previous_password, expires, hide_filename)
+            result = waifuvault.file_update(token, password, previous_password, expires, hide_filename)
+            url_entry.delete(0, tk.END)
+            url_entry.insert(tk.END, result.url)
             target.destroy()
         except Exception as e:
             messagebox.showerror("Error", f"Update failed: {e}")
