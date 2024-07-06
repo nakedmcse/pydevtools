@@ -163,19 +163,26 @@ class waifuvault_ul(base.basedevtools):
             messagebox.showerror("Error", f"Delete failed: {e}")
 
     def export_results(self):
-        outtext = "token,url\n"
-        for widget in self.results_frame.winfo_children():
-            token = ""
-            url = ""
-            for inner_widget in widget.winfo_children():
-                for leaf_widget in inner_widget.winfo_children():
-                    if leaf_widget._name == "token":
-                        token = leaf_widget.get()
-                    elif leaf_widget._name == "url":
-                        url = leaf_widget.get()
-            if token != "" or url != "":
-                outtext = outtext + f"{token},{url}\n"
-        messagebox.showinfo("Export", outtext)
+        file_path = filedialog.asksaveasfilename()
+        if file_path:
+            try:
+                outtext = "token,url\n"
+                for widget in self.results_frame.winfo_children():
+                    token = ""
+                    url = ""
+                    for inner_widget in widget.winfo_children():
+                        for leaf_widget in inner_widget.winfo_children():
+                            if leaf_widget._name == "token":
+                                token = leaf_widget.get()
+                            elif leaf_widget._name == "url":
+                                url = leaf_widget.get()
+                    if token != "" or url != "":
+                        outtext = outtext + f"{token},{url}\n"
+                export_file = open(file_path, "w")
+                export_file.write(outtext)
+                export_file.close()
+            except Exception as e:
+                messagebox.showerror("Error", f"Export failed: {e}")
 
     def show_input_context_menu(self, event):
         self.input_context_menu.post(event.x_root, event.y_root)
