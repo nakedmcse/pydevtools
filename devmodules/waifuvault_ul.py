@@ -55,14 +55,14 @@ class waifuvault_ul(base.basedevtools):
                 entry_lower_line = tk.Frame(new_entry_frame)
                 entry_lower_line.pack(fill=tk.X)
 
-                url_entry = tk.Entry(entry_upper_line, width=70)
+                url_entry = tk.Entry(entry_upper_line, name="url", width=70)
                 url_entry.insert(tk.END, upload_res.url)
                 url_entry.pack(side="left", padx=5)
 
                 copy_url_button = tk.Button(entry_upper_line, text="Copy URL", command=lambda: self.copy_clip(upload_res.url))
                 copy_url_button.pack(side="left", padx=5)
 
-                token_entry = tk.Entry(entry_lower_line, width=35)
+                token_entry = tk.Entry(entry_lower_line, name="token", width=35)
                 token_entry.insert(tk.END, upload_res.token)
                 token_entry.pack(side="left", padx=5)
 
@@ -162,6 +162,21 @@ class waifuvault_ul(base.basedevtools):
         except Exception as e:
             messagebox.showerror("Error", f"Delete failed: {e}")
 
+    def export_results(self):
+        outtext = "token,url\n"
+        for widget in self.results_frame.winfo_children():
+            for inner_widget in widget.winfo_children():
+                token = ""
+                url = ""
+                for leaf_widget in inner_widget.winfo_children():
+                    if leaf_widget._name == "token":
+                        token = leaf_widget.get()
+                    elif leaf_widget._name == "url":
+                        url = leaf_widget.get()
+                if token != "" or url != "":
+                    outtext = outtext + f"{token},{url}\n"
+        messagebox.showinfo("Export", outtext)
+
     def show_input_context_menu(self, event):
         self.input_context_menu.post(event.x_root, event.y_root)
 
@@ -224,6 +239,8 @@ class waifuvault_ul(base.basedevtools):
 
         upload_button = tk.Button(button_lower_frame, text="Upload", command=self.upload_file)
         upload_button.pack(side="left", padx=5)
+        export_button = tk.Button(button_lower_frame, text="Export Results", command=self.export_results)
+        export_button.pack(side="left", padx=5)
 
         self.results_frame = tk.Frame(output_frame, pady=15)
         self.results_frame.pack(fill=tk.X)
