@@ -165,16 +165,16 @@ class waifuvault_ul(base.basedevtools):
     def export_results(self):
         outtext = "token,url\n"
         for widget in self.results_frame.winfo_children():
+            token = ""
+            url = ""
             for inner_widget in widget.winfo_children():
-                token = ""
-                url = ""
                 for leaf_widget in inner_widget.winfo_children():
                     if leaf_widget._name == "token":
                         token = leaf_widget.get()
                     elif leaf_widget._name == "url":
                         url = leaf_widget.get()
-                if token != "" or url != "":
-                    outtext = outtext + f"{token},{url}\n"
+            if token != "" or url != "":
+                outtext = outtext + f"{token},{url}\n"
         messagebox.showinfo("Export", outtext)
 
     def show_input_context_menu(self, event):
