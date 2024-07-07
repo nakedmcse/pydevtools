@@ -189,6 +189,22 @@ class waifuvault_ul(base.basedevtools):
             except Exception as e:
                 messagebox.showerror("Error", f"Export failed: {e}")
 
+    def import_results(self):
+        file_path = filedialog.askopenfilename()
+        if file_path:
+            try:
+                import_file = open(file_path, "r")
+                count = 0
+                for line in import_file.readlines():
+                    if count == 0:
+                        count = count + 1
+                        continue
+                    split = line.split(",")
+                    entry_res = waifuvault.FileResponse(split[0], split[1])
+                    self.insert_entry(entry_res)
+            except Exception as e:
+                messagebox.showerror("Error", f"Import failed: {e}")
+
     def show_input_context_menu(self, event):
         self.input_context_menu.post(event.x_root, event.y_root)
 
@@ -253,6 +269,8 @@ class waifuvault_ul(base.basedevtools):
         self.upload_button.pack(side="left", padx=5)
         export_button = tk.Button(button_lower_frame, text="Export Results", command=self.export_results)
         export_button.pack(side="left", padx=5)
+        import_button = tk.Button(button_lower_frame, text="Import Results", command=self.import_results)
+        import_button.pack(side="left", padx=5)
 
         self.results_frame = tk.Frame(output_frame, pady=15)
         self.results_frame.pack(fill=tk.X)
