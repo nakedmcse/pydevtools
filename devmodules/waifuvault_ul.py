@@ -165,7 +165,9 @@ class waifuvault_ul(base.basedevtools):
             waifuvault.delete_file(token)
             target.destroy()
         except Exception as e:
-            messagebox.showerror("Error", f"Delete failed: {e}")
+            response = messagebox.askyesno("Error", f"Delete failed: {e}\nRemove Entry ?")
+            if response:
+                target.destroy()
 
     def export_results(self):
         file_path = filedialog.asksaveasfilename()
