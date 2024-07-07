@@ -22,6 +22,33 @@ class waifuvault_ul(base.basedevtools):
     new_password_var = None
     opts_hidefilename_var = None
     opts_expire_var = None
+    upload_button = None
+
+    def insert_entry(self, upload_res: waifuvault.FileResponse):
+        new_entry_frame = tk.Frame(self.results_frame, pady=5)
+        new_entry_frame.pack(fill=tk.X)
+        entry_upper_line = tk.Frame(new_entry_frame)
+        entry_upper_line.pack(fill=tk.X)
+        entry_lower_line = tk.Frame(new_entry_frame)
+        entry_lower_line.pack(fill=tk.X)
+
+        url_entry = tk.Entry(entry_upper_line, name="url", width=70)
+        url_entry.insert(tk.END, upload_res.url)
+        url_entry.pack(side="left", padx=5)
+
+        copy_url_button = tk.Button(entry_upper_line, text="Copy URL", command=lambda: self.copy_clip(upload_res.url))
+        copy_url_button.pack(side="left", padx=5)
+
+        token_entry = tk.Entry(entry_lower_line, name="token", width=35)
+        token_entry.insert(tk.END, upload_res.token)
+        token_entry.pack(side="left", padx=5)
+
+        copy_token_button = tk.Button(entry_lower_line, text="Copy Token", command=lambda: self.copy_clip(upload_res.token))
+        copy_token_button.pack(side="left", padx=5)
+        edit_entry_button = tk.Button(entry_lower_line, text="Edit", command=lambda: self.edit_entry(upload_res.token, url_entry))
+        edit_entry_button.pack(side="left", padx=5)
+        delete_entry_button = tk.Button(entry_lower_line, text="Delete", command=lambda: self.delete_entry(upload_res.token, new_entry_frame))
+        delete_entry_button.pack(side="left", padx=5)
 
     def upload_file(self):
         file_path = self.filename_var.get()
@@ -46,32 +73,10 @@ class waifuvault_ul(base.basedevtools):
             upload = waifuvault.FileUpload(target=file_path, oneTimeDownload=self.onetime_var.get(),
                                            hidefilename=self.hidefilename_var.get(), password=password, expires=expires)
             try:
+                self.upload_button.config(state=tk.DISABLED)
                 upload_res = waifuvault.upload_file(upload)
-
-                new_entry_frame = tk.Frame(self.results_frame, pady=5)
-                new_entry_frame.pack(fill=tk.X)
-                entry_upper_line = tk.Frame(new_entry_frame)
-                entry_upper_line.pack(fill=tk.X)
-                entry_lower_line = tk.Frame(new_entry_frame)
-                entry_lower_line.pack(fill=tk.X)
-
-                url_entry = tk.Entry(entry_upper_line, name="url", width=70)
-                url_entry.insert(tk.END, upload_res.url)
-                url_entry.pack(side="left", padx=5)
-
-                copy_url_button = tk.Button(entry_upper_line, text="Copy URL", command=lambda: self.copy_clip(upload_res.url))
-                copy_url_button.pack(side="left", padx=5)
-
-                token_entry = tk.Entry(entry_lower_line, name="token", width=35)
-                token_entry.insert(tk.END, upload_res.token)
-                token_entry.pack(side="left", padx=5)
-
-                copy_token_button = tk.Button(entry_lower_line, text="Copy Token", command=lambda: self.copy_clip(upload_res.token))
-                copy_token_button.pack(side="left", padx=5)
-                edit_entry_button = tk.Button(entry_lower_line, text="Edit", command=lambda: self.edit_entry(upload_res.token, url_entry))
-                edit_entry_button.pack(side="left", padx=5)
-                delete_entry_button = tk.Button(entry_lower_line, text="Delete", command=lambda: self.delete_entry(upload_res.token, new_entry_frame))
-                delete_entry_button.pack(side="left", padx=5)
+                self.upload_button.config(state=tk.NORMAL)
+                self.insert_entry(upload_res)
             except Exception as e:
                 messagebox.showerror("Error", f"Upload failed: {e}")
 
@@ -244,8 +249,8 @@ class waifuvault_ul(base.basedevtools):
         self.password_var = tk.Entry(button_frame, width=22)
         self.password_var.pack(side="left", padx=5)
 
-        upload_button = tk.Button(button_lower_frame, text="Upload", command=self.upload_file)
-        upload_button.pack(side="left", padx=5)
+        self.upload_button = tk.Button(button_lower_frame, text="Upload", command=self.upload_file)
+        self.upload_button.pack(side="left", padx=5)
         export_button = tk.Button(button_lower_frame, text="Export Results", command=self.export_results)
         export_button.pack(side="left", padx=5)
 
