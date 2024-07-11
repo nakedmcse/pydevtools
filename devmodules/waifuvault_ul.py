@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import font, filedialog, messagebox
 import waifuvault
 from devmodules import basedevtools as base
+import time
 
 
 class waifuvault_ul(base.basedevtools):
@@ -23,6 +24,7 @@ class waifuvault_ul(base.basedevtools):
     opts_hidefilename_var = None
     opts_expire_var = None
     upload_button = None
+    validate_import_var = None
 
     def insert_entry(self, upload_res: waifuvault.FileResponse):
         new_entry_frame = tk.Frame(self.results_frame, pady=5)
@@ -196,6 +198,7 @@ class waifuvault_ul(base.basedevtools):
         if file_path:
             try:
                 import_file = open(file_path, "r")
+                validate_entry = self.validate_import_var.get()
                 count = 0
                 for line in import_file.readlines():
                     if count == 0:
@@ -203,7 +206,15 @@ class waifuvault_ul(base.basedevtools):
                         continue
                     split = line.split(",")
                     entry_res = waifuvault.FileResponse(split[0], split[1])
-                    self.insert_entry(entry_res)
+                    if not validate_entry:
+                        self.insert_entry(entry_res)
+                        continue
+                    try:
+                        info = waifuvault.file_info(entry_res.token, True)
+                        time.sleep(1)
+                        self.insert_entry(entry_res)
+                    except:
+                        continue
             except Exception as e:
                 messagebox.showerror("Error", f"Import failed: {e}")
 
@@ -273,6 +284,9 @@ class waifuvault_ul(base.basedevtools):
         export_button.pack(side="left", padx=5)
         import_button = tk.Button(button_lower_frame, text="Import Results", command=self.import_results)
         import_button.pack(side="left", padx=5)
+        self.validate_import_var = tk.BooleanVar(value=False)
+        validate_import_flag = tk.Checkbutton(button_lower_frame, text="Validate Import", variable=self.validate_import_var)
+        validate_import_flag.pack(side="left", padx=5)
 
         self.results_frame = tk.Frame(output_frame, pady=15)
         self.results_frame.pack(fill=tk.X)
