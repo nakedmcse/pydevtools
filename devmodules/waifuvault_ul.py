@@ -13,7 +13,10 @@ class waifuvault_ul(base.basedevtools):
     results_frame = None
     output_context_menu = None
     input_context_menu = None
+    bucket_context_menu = None
     root = None
+    button_upper_frame = None
+    bucket_frame = None
     filename_var = None
     hidefilename_var = None
     onetime_var = None
@@ -25,6 +28,7 @@ class waifuvault_ul(base.basedevtools):
     opts_expire_var = None
     upload_button = None
     validate_import_var = None
+    bucket_token_var = None
 
     def insert_entry(self, upload_res: waifuvault.FileResponse):
         new_entry_frame = tk.Frame(self.results_frame, pady=5)
@@ -54,6 +58,7 @@ class waifuvault_ul(base.basedevtools):
 
     def upload_file(self):
         file_path = self.filename_var.get()
+        bucket = self.bucket_token_var.get()
         password = self.password_var.get()
         if password == '':
             password = None
@@ -72,7 +77,7 @@ class waifuvault_ul(base.basedevtools):
                 expires = "365d"
 
         if file_path:
-            upload = waifuvault.FileUpload(target=file_path, oneTimeDownload=self.onetime_var.get(),
+            upload = waifuvault.FileUpload(target=file_path, bucket_token=bucket, oneTimeDownload=self.onetime_var.get(),
                                            hidefilename=self.hidefilename_var.get(), password=password, expires=expires)
             try:
                 self.upload_button.config(state=tk.DISABLED)
@@ -218,10 +223,53 @@ class waifuvault_ul(base.basedevtools):
             except Exception as e:
                 messagebox.showerror("Error", f"Import failed: {e}")
 
+    def create_bucket(self):
+        try:
+            bucket = waifuvault.create_bucket()
+            self.bucket_token_var.delete(0, tk.END)
+            self.bucket_token_var.insert(tk.END, bucket.token)
+        except Exception as e:
+            messagebox.showerror("Error", f"Create bucket failed: {e}")
+
+    def delete_bucket(self):
+        try:
+            response = messagebox.askyesno("Error", f"Delete will remove bucket and all files.\nAre you sure ?")
+            if response:
+                token = self.bucket_token_var.get()
+                del_bucket = waifuvault.delete_bucket(token)
+                self.bucket_token_var.delete(0, tk.END)
+                screen_files = self.results_frame.winfo_children()
+                frames = [frame for frame in screen_files if isinstance(frame, tk.Frame)]
+                for frame in frames:
+                    frame.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", f"Delete bucket failed: {e}")
+
+    def get_bucket(self):
+        try:
+            token = self.bucket_token_var.get()
+            bucket = waifuvault.get_bucket(token)
+            for file in bucket.files:
+                self.insert_entry(file)
+        except Exception as e:
+            messagebox.showerror("Error", f"Get bucket failed: {e}")
+
     def show_input_context_menu(self, event):
         self.input_context_menu.post(event.x_root, event.y_root)
 
-    def paste_input(self, event=None):
+    def show_bucket_context_menu(self, event):
+        self.bucket_context_menu.post(event.x_root, event.y_root)
+
+    def copy_filename(self, event=None):
+        try:
+            text_content = self.filename_var.selection_get()
+            self.root.clipboard_clear()
+            self.root.clipboard_append(text_content)
+        except tk.TclError:
+            # handle nothing selected
+            pass
+
+    def paste_filename(self, event=None):
         try:
             start = self.filename_var.index("sel.first")
             end = self.filename_var.index("sel.last")
@@ -236,27 +284,66 @@ class waifuvault_ul(base.basedevtools):
             # handle nothing in clipboard
             pass
 
+    def copy_bucket(self, event=None):
+        try:
+            text_content = self.bucket_token_var.selection_get()
+            self.root.clipboard_clear()
+            self.root.clipboard_append(text_content)
+        except tk.TclError:
+            # handle nothing selected
+            pass
+
+    def paste_bucket(self, event=None):
+        try:
+            start = self.bucket_token_var.index("sel.first")
+            end = self.bucket_token_var.index("sel.last")
+            self.bucket_token_var.delete(start, end)
+        except tk.TclError:
+            # handle nothing selected
+            pass
+        try:
+            text_content = self.root.clipboard_get()
+            self.bucket_token_var.insert(tk.INSERT, text_content)
+        except tk.TclError:
+            # handle nothing in clipboard
+            pass
+
     def render(self, output_frame):
         self.root = output_frame
         header_font = font.Font(size=14, weight="bold")
         header_label = tk.Label(output_frame, text="WaifuVault Uploader", font=header_font)
         header_label.pack(anchor="nw")
 
-        button_upper_frame = tk.Frame(output_frame)
-        button_upper_frame.pack(fill=tk.X)
+        self.button_upper_frame = tk.Frame(output_frame)
+        self.button_upper_frame.pack(fill=tk.X)
+        self.bucket_frame = tk.Frame(output_frame)
+        self.bucket_frame.pack(fill=tk.X)
         button_frame = tk.Frame(output_frame)
         button_frame.pack(fill=tk.X)
         button_lower_frame = tk.Frame(output_frame)
         button_lower_frame.pack(fill=tk.X)
 
-        filename_label = tk.Label(button_upper_frame, text="File:")
-        filename_label.pack(side="left", padx=5)
-        self.filename_var = tk.Entry(button_upper_frame, width=65)
+        filename_label = tk.Label(self.button_upper_frame, text="File:")
+        filename_label.pack(side="left", padx=(25, 5))
+        self.filename_var = tk.Entry(self.button_upper_frame, width=65)
         self.filename_var.bind("<Button-2>", self.show_input_context_menu)
         self.filename_var.bind("<Button-3>", self.show_input_context_menu)
         self.filename_var.pack(side="left", padx=5)
-        choosefile_button = tk.Button(button_upper_frame, text="Browse", command=self.choose_file)
+        choosefile_button = tk.Button(self.button_upper_frame, text="Browse", command=self.choose_file)
         choosefile_button.pack(side="left", padx=5)
+
+        bucket_label = tk.Label(self.bucket_frame, text="Bucket:")
+        bucket_label.pack(side="left", padx=5)
+        self.bucket_token_var = tk.Entry(self.bucket_frame, width=35)
+        self.bucket_token_var.bind("<Button-2>", self.show_bucket_context_menu)
+        self.bucket_token_var.bind("<Button-3>", self.show_bucket_context_menu)
+        self.bucket_token_var.pack(side="left", padx=5)
+        create_bucket_button = tk.Button(self.bucket_frame, text="Create Bucket", command=self.create_bucket)
+        create_bucket_button.pack(side="left", padx=5)
+        get_bucket_button = tk.Button(self.bucket_frame, text="Get Bucket", command=self.get_bucket)
+        get_bucket_button.pack(side="left", padx=5)
+        delete_bucket_button = tk.Button(self.bucket_frame, text="Delete Bucket", command=self.delete_bucket)
+        delete_bucket_button.pack(side="left", padx=5)
 
         self.hidefilename_var = tk.BooleanVar(value=False)
         hidefilename_flag = tk.Checkbutton(button_frame, text="Hide Filename", variable=self.hidefilename_var)
@@ -290,3 +377,11 @@ class waifuvault_ul(base.basedevtools):
 
         self.results_frame = tk.Frame(output_frame, pady=15)
         self.results_frame.pack(fill=tk.X)
+
+        self.input_context_menu = tk.Menu(self.button_upper_frame, tearoff=0)
+        self.input_context_menu.add_command(label="Copy", command=self.copy_filename)
+        self.input_context_menu.add_command(label="Paste", command=self.paste_filename)
+
+        self.bucket_context_menu = tk.Menu(self.bucket_frame, tearoff=0)
+        self.bucket_context_menu.add_command(label="Copy", command=self.copy_bucket)
+        self.bucket_context_menu.add_command(label="Paste", command=self.paste_bucket)
