@@ -254,6 +254,16 @@ class waifuvault_ul(base.basedevtools):
         except Exception as e:
             messagebox.showerror("Error", f"Get bucket failed: {e}")
 
+    def show_restrictions(self):
+        try:
+            rests = waifuvault.get_restrictions()
+            output_text = 'SERVER RESTRICTIONS\n\n'
+            for rest in rests.Restrictions:
+                output_text += f'{rest.type}:\n{rest.value}\n\n'
+            messagebox.showinfo("Server Restrictions", output_text)
+        except Exception as e:
+            messagebox.showerror("Error", f"Get bucket failed: {e}")
+
     def show_input_context_menu(self, event):
         self.input_context_menu.post(event.x_root, event.y_root)
 
@@ -342,7 +352,7 @@ class waifuvault_ul(base.basedevtools):
         create_bucket_button.pack(side="left", padx=5)
         get_bucket_button = tk.Button(self.bucket_frame, text="Get Bucket", command=self.get_bucket)
         get_bucket_button.pack(side="left", padx=5)
-        delete_bucket_button = tk.Button(self.bucket_frame, text="Delete Bucket", command=self.delete_bucket)
+        delete_bucket_button = tk.Button(self.bucket_frame, text="Delete Bucket", bg="red", command=self.delete_bucket)
         delete_bucket_button.pack(side="left", padx=5)
 
         self.hidefilename_var = tk.BooleanVar(value=False)
@@ -367,6 +377,8 @@ class waifuvault_ul(base.basedevtools):
 
         self.upload_button = tk.Button(button_lower_frame, text="Upload", command=self.upload_file)
         self.upload_button.pack(side="left", padx=5)
+        restrictions_button = tk.Button(button_lower_frame, text="Show Restrictions", command=self.show_restrictions)
+        restrictions_button.pack(side="left", padx=5)
         export_button = tk.Button(button_lower_frame, text="Export Results", command=self.export_results)
         export_button.pack(side="left", padx=5)
         import_button = tk.Button(button_lower_frame, text="Import Results", command=self.import_results)
